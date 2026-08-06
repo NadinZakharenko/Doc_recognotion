@@ -1,0 +1,398 @@
+openapi: 3.0.3
+info:
+  title: Doc Recognition Integration API (MAX → 1С:ERP)
+  description: |
+    HTTP API интеграционного сервиса для 1С:ERP (контур RWB).
+
+    1С в режиме pull:
+    1. получает список пакетов со статусом `ready`;
+    2. забирает `result.json` по `packet_id`;
+    3. оператор вручную создаёт черновик ПТиУ;
+    4. вызывает `POST /packets/{packet_id}/imported`.
+
+    Аутентификация MVP: статический Bearer-токен (или Basic) на стороне сервиса.
+  version: 1.0.0
+  contact:
+    name: RWB Integration
+
+servers:
+  - url: https://doc-recognition.rwb.local/api/v1
+    description: On-prem RWB (пример)
+
+tags:
+  - name: packets
+    description: Пакеты распознанных документов для 1С
+  - name: health
+    description: Служебные проверки
+
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Liveness
+      operationId: getHealth
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /packets:
+    get:
+      tags: [packets]
+      summary: Список пакетов
+      description: |
+        Основной сценарий 1С: `status=ready` + фильтры по организации/складу.
+        Без маппинга пользователя MAX↔1С на старте.
+      operationId: listPackets
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/PacketStatus"
+          description: Фильтр по статусу. Для загрузки в 1С обычно `ready`.
+        - name: org_id
+          in: query
+          schema:
+            type: string
+        - name: warehouse_id
+          in: query
+          schema:
+            type: string
+        - name: document_type
+          in: query
+          schema:
+            $ref: "#/components/schemas/DocumentType"
+        - name: created_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: created_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Список пакетов
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PacketListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /packets/{packet_id}:
+    get:
+      tags: [packets]
+      summary: Карточка пакета (без полного result)
+      operationId: getPacket
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PacketId"
+      responses:
+        "200":
+          description: Метаданные пакета
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PacketSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /packets/{packet_id}/result:
+    get:
+      tags: [packets]
+      summary: Получить result.json пакета
+      description: |
+        Возвращает канонический результат распознавания.
+        Доступно при статусах `ready` и `imported` (для повторного просмотра).
+      operationId: getPacketResult
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PacketId"
+      responses:
+        "200":
+          description: Результат распознавания
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecognitionResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Результат ещё не готов
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /packets/{packet_id}/imported:
+    post:
+      tags: [packets]
+      summary: Отметить пакет как загруженный в 1С
+      description: |
+        Идемпотентный вызов после ручного создания черновика ПТиУ.
+        Повторный POST с тем же/любым телом для уже `imported` возвращает 200.
+      operationId: markPacketImported
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PacketId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportedRequest"
+      responses:
+        "200":
+          description: Пакет помечен как imported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PacketSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Пакет в статусе, недопустимом для imported (например draft/processing/error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Статический токен интеграционного сервиса для 1С
+
+  parameters:
+    PacketId:
+      name: packet_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Некорректный запрос
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Не авторизован
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Пакет не найден
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    PacketStatus:
+      type: string
+      enum:
+        - draft
+        - queued
+        - processing
+        - ready
+        - error
+        - imported
+      description: |
+        draft — набор фото, ещё не завершён;
+        queued/processing — в OCR;
+        ready — можно забирать в 1С;
+        error — сбой распознавания;
+        imported — черновик ПТиУ создан / пакет закрыт со стороны 1С.
+
+    DocumentType:
+      type: string
+      enum: [torg12, upd, unknown]
+
+    PacketSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - packet_id
+        - status
+        - org_id
+        - warehouse_id
+        - max_user_id
+        - photos_count
+        - created_at
+        - updated_at
+      properties:
+        packet_id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/PacketStatus"
+        document_type:
+          $ref: "#/components/schemas/DocumentType"
+        org_id:
+          type: string
+        org_name:
+          type: string
+        warehouse_id:
+          type: string
+        warehouse_name:
+          type: string
+        max_user_id:
+          type: string
+        photos_count:
+          type: integer
+          minimum: 0
+        document_number:
+          type: ["string", "null"]
+        document_date:
+          type: ["string", "null"]
+          format: date
+        supplier_name:
+          type: ["string", "null"]
+        overall_confidence:
+          type: ["number", "null"]
+          minimum: 0
+          maximum: 1
+        error_message:
+          type: ["string", "null"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        recognized_at:
+          type: ["string", "null"]
+          format: date-time
+        imported_at:
+          type: ["string", "null"]
+          format: date-time
+        imported_by:
+          type: ["string", "null"]
+          description: Логин/имя оператора 1С (если передано)
+        ptu_ref:
+          type: ["string", "null"]
+          description: Ссылка/номер черновика ПТиУ в 1С (если передано)
+
+    PacketListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, total, limit, offset]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PacketSummary"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    ImportedRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        imported_by:
+          type: string
+          description: Пользователь 1С, создавший черновик
+        ptu_ref:
+          type: string
+          description: Номер или GUID черновика ПТиУ
+        comment:
+          type: string
+
+    RecognitionResult:
+      type: object
+      description: |
+        Полная схема канонического result.json описана в specs/result.schema.json.
+        Здесь — упрощённая проекция для OpenAPI (поля верхнего уровня).
+      additionalProperties: true
+      required:
+        - schema_version
+        - packet_id
+        - document_type
+        - header
+        - lines
+        - meta
+      properties:
+        schema_version:
+          type: string
+          example: "1.0"
+        packet_id:
+          type: string
+          format: uuid
+        document_type:
+          $ref: "#/components/schemas/DocumentType"
+        header:
+          type: object
+        lines:
+          type: array
+          items:
+            type: object
+        totals:
+          type: object
+        meta:
+          type: object
+        warnings:
+          type: array
+          items:
+            type: object
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: PACKET_NOT_READY
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

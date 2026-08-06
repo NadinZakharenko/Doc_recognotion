@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rwb.local/schemas/doc-recognition/result.schema.json",
+  "title": "PacketRecognitionResult",
+  "description": "Канонический результат распознавания пакета ТОРГ-12 / УПД для загрузки в 1С:ERP (черновик ПТиУ).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "packet_id",
+    "document_type",
+    "header",
+    "lines",
+    "meta"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Версия контракта result.json"
+    },
+    "packet_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Идентификатор пакета в интеграционном сервисе"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": ["torg12", "upd", "unknown"],
+      "description": "Тип распознанного документа. unknown — если модель не уверена"
+    },
+    "header": {
+      "$ref": "#/$defs/DocumentHeader"
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/DocumentLine"
+      }
+    },
+    "totals": {
+      "$ref": "#/$defs/DocumentTotals"
+    },
+    "meta": {
+      "$ref": "#/$defs/ResultMeta"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Warning"
+      },
+      "default": []
+    }
+  },
+  "$defs": {
+    "DocumentHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["number", "date"],
+      "properties": {
+        "number": {
+          "type": ["string", "null"],
+          "description": "Номер документа"
+        },
+        "date": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Дата документа (YYYY-MM-DD)"
+        },
+        "supplier": {
+          "$ref": "#/$defs/Counterparty"
+        },
+        "buyer": {
+          "$ref": "#/$defs/Counterparty"
+        },
+        "consignee": {
+          "$ref": "#/$defs/Counterparty"
+        },
+        "currency": {
+          "type": "string",
+          "default": "RUB",
+          "description": "Код валюты ISO 4217"
+        },
+        "contract_number": {
+          "type": ["string", "null"]
+        },
+        "contract_date": {
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "raw_text_hints": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Ненормализованные фрагменты для ручной проверки в 1С"
+        }
+      }
+    },
+    "Counterparty": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": ["string", "null"]
+        },
+        "inn": {
+          "type": ["string", "null"],
+          "pattern": "^(\\d{10}|\\d{12})?$"
+        },
+        "kpp": {
+          "type": ["string", "null"],
+          "pattern": "^(\\d{9})?$"
+        },
+        "address": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "DocumentLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line_no", "name"],
+      "properties": {
+        "line_no": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": ["string", "null"],
+          "description": "Наименование как в документе"
+        },
+        "vendor_code": {
+          "type": ["string", "null"],
+          "description": "Артикул / код поставщика"
+        },
+        "unit": {
+          "type": ["string", "null"],
+          "description": "Единица измерения (шт, кг, упак и т.п.)"
+        },
+        "quantity": {
+          "type": ["number", "null"]
+        },
+        "price": {
+          "type": ["number", "null"],
+          "description": "Цена за единицу"
+        },
+        "amount": {
+          "type": ["number", "null"],
+          "description": "Сумма без НДС или по правилам документа — см. amount_includes_vat"
+        },
+        "vat_rate": {
+          "type": ["number", "null"],
+          "description": "Ставка НДС, % (0, 10, 20, …)"
+        },
+        "vat_amount": {
+          "type": ["number", "null"]
+        },
+        "amount_with_vat": {
+          "type": ["number", "null"]
+        },
+        "amount_includes_vat": {
+          "type": ["boolean", "null"],
+          "description": "true, если amount уже с НДС"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "DocumentTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lines_count": {
+          "type": ["integer", "null"]
+        },
+        "amount": {
+          "type": ["number", "null"]
+        },
+        "vat_amount": {
+          "type": ["number", "null"]
+        },
+        "amount_with_vat": {
+          "type": ["number", "null"]
+        }
+      }
+    },
+    "ResultMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "org_id",
+        "warehouse_id",
+        "max_user_id",
+        "created_at",
+        "recognized_at",
+        "overall_confidence",
+        "source_images"
+      ],
+      "properties": {
+        "org_id": {
+          "type": "string",
+          "description": "Код/ID организации из справочника бота"
+        },
+        "warehouse_id": {
+          "type": "string",
+          "description": "Код/ID склада из справочника бота"
+        },
+        "max_user_id": {
+          "type": "string",
+          "description": "ID пользователя MAX"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "recognized_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "overall_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "ocr_provider": {
+          "type": ["string", "null"],
+          "description": "Идентификатор провайдера/модели OCR"
+        },
+        "source_images": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/SourceImage"
+          }
+        }
+      }
+    },
+    "SourceImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file_id", "filename"],
+      "properties": {
+        "file_id": {
+          "type": "string"
+        },
+        "filename": {
+          "type": "string"
+        },
+        "content_type": {
+          "type": "string",
+          "default": "image/jpeg"
+        },
+        "sha256": {
+          "type": ["string", "null"]
+        },
+        "page_hint": {
+          "type": ["integer", "null"],
+          "description": "Предполагаемый номер страницы в пакете"
+        }
+      }
+    },
+    "Warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "LOW_CONFIDENCE",
+            "DOCUMENT_TYPE_UNCERTAIN",
+            "HEADER_INCOMPLETE",
+            "LINE_INCOMPLETE",
+            "TOTALS_MISMATCH",
+            "POSSIBLE_DUPLICATE",
+            "UNREADABLE_REGION",
+            "OTHER"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "line_no": {
+          "type": ["integer", "null"]
+        }
+      }
+    }
+  }
+}

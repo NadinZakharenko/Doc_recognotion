@@ -1,0 +1,108 @@
+<mxfile host="app.diagrams.net" modified="2026-08-02T17:10:00.000Z" agent="Perplexity" version="22.0.3" type="device">
+  <diagram id="MAX-1C-Arch" name="MAX-1C-Intermediate-Storage">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Пользователь -->
+        <mxCell id="user" value="Пользователь (товаровед)&#10;Фотографирует накладную в клиенте MAX" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="220" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- MAX Platform -->
+        <mxCell id="max" value="Платформа MAX / Bot API&#10;Принимает сообщения и вложения" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="380" y="80" width="260" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow user -> max -->
+        <mxCell id="e_user_max" value="1. Фото документа" style="endArrow=block;html=1;" edge="1" parent="1" source="user" target="max">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="0" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Integration Service -->
+        <mxCell id="is" value="Интеграционный сервис бота&#10;- Webhook endpoint&#10;- Валидация X-Max-Bot-Api-Secret&#10;- Формирование пакета накладной&#10;- Журнал статусов" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="380" y="220" width="320" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow max -> is -->
+        <mxCell id="e_max_is" value="2. Webhook: message_created + attachment" style="endArrow=block;html=1;" edge="1" parent="1" source="max" target="is">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- File Storage -->
+        <mxCell id="fs" value="Промежуточное хранилище файлов&#10;Nextcloud / WebDAV / S3 / SMB&#10;Исходные фото, result.json, preview.xlsx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="280" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Registry -->
+        <mxCell id="reg" value="Реестр пакетов (БД)&#10;PostgreSQL&#10;packet_id, user, org, warehouse, status, confidence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="740" y="220" width="280" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows from is to fs & reg -->
+        <mxCell id="e_is_fs" value="3a. Сохранение фото" style="endArrow=block;html=1;" edge="1" parent="1" source="is" target="fs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_is_reg" value="3b. Метаданные пакета" style="endArrow=block;html=1;" edge="1" parent="1" source="is" target="reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- OCR Service -->
+        <mxCell id="ocr" value="Сервис распознавания&#10;OCR / Table extraction&#10;Проверка качества фото&#10;Поиск дублей и двух документов&#10;Формирование структурированного результата" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="380" y="400" width="340" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows is -> ocr, ocr <-> fs, ocr -> reg -->
+        <mxCell id="e_is_ocr" value="4. Задание на обработку" style="endArrow=block;html=1;" edge="1" parent="1" source="is" target="ocr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_ocr_fs" value="5a. Чтение изображений / запись result.json" style="endArrow=block;html=1;" edge="1" parent="1" source="ocr" target="fs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_ocr_reg" value="5c. Обновление статуса пакета" style="endArrow=block;html=1;" edge="1" parent="1" source="ocr" target="reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 1C ERP -->
+        <mxCell id="ic" value="1С:ERP&#10;Команда 'Загрузить приходную накладную'&#10;Список пакетов по пользователю/складу&#10;Получение result.json&#10;Сопоставление НСИ&#10;Создание черновика ПТиУ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="740" y="420" width="320" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- 1C <-> IS -->
+        <mxCell id="e_ic_is_list" value="6. Запрос списка пакетов / 6.1 Список (Готов к загрузке)" style="endArrow=block;html=1;" edge="1" parent="1" source="ic" target="is">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_ic_is_result" value="7. Запрос результата / 7.1 result.json, ссылки" style="endArrow=block;html=1;" edge="1" parent="1" source="ic" target="is">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Status update back -->
+        <mxCell id="e_ic_is_status" value="8. ПТиУ создан / пакет закрыт" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="ic" target="is">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e_is_reg_close" value="8.1 Обновление статуса" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="is" target="reg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Notification to MAX -->
+        <mxCell id="e_is_max_notify" value="9. Уведомление пользователю о результате" style="endArrow=block;html=1;dashed=1;" edge="1" parent="1" source="is" target="max">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Contour group (optional) -->
+        <mxCell id="group_internal" value="Внутренний контур (RWB / датацентр)" style="swimlane=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;strokeColor=#999999;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="200" width="1060" height="400" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
