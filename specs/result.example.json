@@ -48,7 +48,7 @@
   "meta": {
     "org_id": "org-001",
     "warehouse_id": "wh-014",
-    "max_user_id": "max-user-42",
+    "telegram_user_id": "123456789",
     "created_at": "2026-08-03T08:15:00Z",
     "recognized_at": "2026-08-03T08:16:12Z",
     "overall_confidence": 0.88,

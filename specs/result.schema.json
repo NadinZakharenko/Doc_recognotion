@@ -195,7 +195,7 @@
       "required": [
         "org_id",
         "warehouse_id",
-        "max_user_id",
+        "telegram_user_id",
         "created_at",
         "recognized_at",
         "overall_confidence",
@@ -210,9 +210,9 @@
           "type": "string",
           "description": "Код/ID склада из справочника бота"
         },
-        "max_user_id": {
+        "telegram_user_id": {
           "type": "string",
-          "description": "ID пользователя MAX"
+          "description": "ID пользователя Telegram"
         },
         "created_at": {
           "type": "string",

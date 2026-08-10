@@ -24,8 +24,19 @@ node_modules/
 dist/
 build/
 
-# Temp / local storage
+# Temp / local storage / runtime
 tmp/
 temp/
-storage/
-data/packets/
+/storage/
+data/
+!data/packets/
+data/packets/**
+!data/packets/.gitkeep
+tools/ngrok/
+tools/anydoc/
+*.log
+
+# Local scratch / OCR dumps (не для MVP-ветки)
+/1.png
+/result.json
+/recognized.md

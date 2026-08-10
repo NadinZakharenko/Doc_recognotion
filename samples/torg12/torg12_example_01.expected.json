@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0",
+  "source_sample": "samples/torg12/torg12_example_01.png",
+  "document_type": "torg12",
+  "header": {
+    "number": "31",
+    "date": "2022-03-30",
+    "supplier": {
+      "name": "ЗАО \"Торговый дом \"Комплексный\"",
+      "inn": "9999115007",
+      "kpp": null,
+      "address": "117630, г.Москва, Севастопольский пр-кт, д.56"
+    },
+    "buyer": {
+      "name": "ООО Бюджет",
+      "inn": "7705260071",
+      "kpp": null,
+      "address": "117418, г.Москва, Нахимовский пр-кт, д.45"
+    },
+    "consignee": {
+      "name": "ООО Бюджет",
+      "inn": "7705260071",
+      "kpp": null,
+      "address": "117418, г.Москва, Нахимовский пр-кт, д.45"
+    },
+    "currency": "RUB",
+    "contract_number": null,
+    "contract_date": null
+  },
+  "lines": [
+    {
+      "line_no": 1,
+      "name": "Вентилятор BINATONE ALPINE",
+      "vendor_code": "B-789",
+      "unit": "шт",
+      "quantity": 2,
+      "price": 1400.0,
+      "amount": 2800.0,
+      "vat_rate": 20,
+      "vat_amount": 560.0,
+      "amount_with_vat": 3360.0,
+      "amount_includes_vat": false
+    },
+    {
+      "line_no": 2,
+      "name": "Вентилятор JIPONIC",
+      "vendor_code": "B-987",
+      "unit": "шт",
+      "quantity": 2,
+      "price": 1700.0,
+      "amount": 3400.0,
+      "vat_rate": 20,
+      "vat_amount": 680.0,
+      "amount_with_vat": 4080.0,
+      "amount_includes_vat": false
+    },
+    {
+      "line_no": 3,
+      "name": "Вентилятор оконный, модель 900",
+      "vendor_code": "BO-900",
+      "unit": "шт",
+      "quantity": 2,
+      "price": 2600.0,
+      "amount": 5200.0,
+      "vat_rate": 20,
+      "vat_amount": 1040.0,
+      "amount_with_vat": 6240.0,
+      "amount_includes_vat": false
+    },
+    {
+      "line_no": 4,
+      "name": "Комбайн кухонный BINATONE FP 67",
+      "vendor_code": "KB-900",
+      "unit": "шт",
+      "quantity": 2,
+      "price": 5625.0,
+      "amount": 11250.0,
+      "vat_rate": 20,
+      "vat_amount": 2250.0,
+      "amount_with_vat": 13500.0,
+      "amount_includes_vat": false
+    }
+  ],
+  "totals": {
+    "lines_count": 4,
+    "amount": 22650.0,
+    "vat_amount": 4530.0,
+    "amount_with_vat": 27180.0
+  },
+  "notes": "Эталон для калибровки OCR. Скан/скрин учебной формы ТОРГ-12 №31 от 30.03.2022."
+}

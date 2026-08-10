@@ -1,19 +1,34 @@
-# Doc recognition (MAX → OCR → 1С)
+# Doc recognition (Telegram → OCR → 1С)
 
-Интеграционный контур для RWB: бот MAX принимает фото ТОРГ-12/УПД, сервис распознаёт документ и отдаёт `result.json` в 1С:ERP для ручного создания черновика ПТиУ.
+Пилот RWB: товаровед фотографирует ТОРГ-12/УПД в **Telegram**, сервис сохраняет пакет на **Yandex Disk** (или local), распознаёт документ и отдаёт `result.json` в **1С:ERP**.
 
-## Документы
+## Быстрый старт
+
+```powershell
+Copy-Item .env.example .env
+docker compose up -d --build
+curl http://localhost:8080/health
+```
+
+Чеклист BotFather / туннель / Yandex: [`docs/setup-checklist.md`](docs/setup-checklist.md)
+
+## Документы MVP
 
 | Путь | Описание |
 |------|----------|
-| `docs/mvp-backlog.md` | Backlog MVP по итерациям |
-| `specs/result.schema.json` | JSON Schema результата распознавания |
-| `specs/result.example.json` | Пример `result.json` |
-| `specs/openapi.yaml` | HTTP API для 1С (`list` / `result` / `imported`) |
-| `max_1c_architecture.drawio` | Архитектурная схема |
-| `Архитектурная схема взаимодействия MAX с 1С через.md` | Описание архитектуры |
-| `Концепт-дизайн_автоматизация_ПТиУ_по_фото_RWB.docx` | Концепт-дизайн |
+| [`docs/mvp-overview.md`](docs/mvp-overview.md) | Зафиксированный MVP |
+| [`docs/mvp-backlog.md`](docs/mvp-backlog.md) | Backlog по итерациям |
+| [`docs/setup-checklist.md`](docs/setup-checklist.md) | Доступы и запуск |
+| [`specs/result.schema.json`](specs/result.schema.json) | JSON Schema результата |
+| [`specs/openapi.yaml`](specs/openapi.yaml) | HTTP API для 1С |
+| [`services/integration/`](services/integration/) | Код сервиса + DDL |
 
-## Статус
+## Краткие решения MVP
 
-Проектирование MVP. Реализация бота и сервисов — по `docs/mvp-backlog.md`.
+- Канал: новый Telegram-бот, webhook через туннель, **1 пользователь** (whitelist)
+- Хранилище: Yandex Disk (личный 360, персональные каталоги); fallback local/SMB
+- UX бота: org/склад + фото + «Завершить пакет»; без push ready/imported
+- 1С: кнопка обновить, **ручной выбор** пакета, ручной черновик ПТиУ
+- Образцы ТОРГ-12/УПД: запрошены
+
+Исторические материалы (архитектура MAX, концепт Band/RWBdisk) оставлены в корне для справки.

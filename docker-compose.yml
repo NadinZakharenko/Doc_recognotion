@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: docrec
+      POSTGRES_USER: docrec
+      POSTGRES_PASSWORD: docrec
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./services/integration/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docrec -d docrec"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./services/integration
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://docrec:docrec@db:5432/docrec
+      POSTGRES_HOST: db
+      LOCAL_STORAGE_ROOT: /data/packets
+    ports:
+      - "8080:8080"
+    volumes:
+      - packet_data:/data/packets
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./services/integration
+    command: ["python", "-m", "app.worker.runner"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://docrec:docrec@db:5432/docrec
+      POSTGRES_HOST: db
+      LOCAL_STORAGE_ROOT: /data/packets
+      WORKER_ID: worker-1
+    volumes:
+      - packet_data:/data/packets
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  packet_data:
