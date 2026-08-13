@@ -10,7 +10,8 @@ from typing import Any
 import httpx
 
 from app.config import Settings
-from app.ocr.openai_vision import SYSTEM_PROMPT, USER_INSTRUCTION, _extract_json, _guess_mime
+from app.ocr.image_normalize import to_jpeg_bytes
+from app.ocr.openai_vision import SYSTEM_PROMPT, USER_INSTRUCTION, _extract_json
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,8 @@ def _mime_to_ocr(mime: str) -> str:
         return "PNG"
     if "pdf" in m:
         return "PDF"
+    if "webp" in m:
+        return "WEBP"
     return "JPEG"
 
 
@@ -146,16 +149,7 @@ async def _vision_gemma(settings: Settings, files: list[dict[str, Any]]) -> dict
 
     content: list[dict[str, Any]] = [{"type": "text", "text": f"{SYSTEM_PROMPT}\n\n{USER_INSTRUCTION}"}]
     for f in files:
-        name = f.get("filename") or "file.jpg"
-        mime = _guess_mime(name, f.get("content_type"))
-        data: bytes = f["data"]
-        if not mime.startswith("image/"):
-            if data[:3] == b"\xff\xd8\xff":
-                mime = "image/jpeg"
-            elif data[:8] == b"\x89PNG\r\n\x1a\n":
-                mime = "image/png"
-            else:
-                continue
+        data, mime = to_jpeg_bytes(f["data"])
         b64 = base64.standard_b64encode(data).decode("ascii")
         content.append(
             {
@@ -195,8 +189,7 @@ async def recognize_with_yandexgpt(settings: Settings, files: list[dict[str, Any
     ocr_parts: list[str] = []
     for i, f in enumerate(files, start=1):
         name = f.get("filename") or f"file_{i}.jpg"
-        mime = _guess_mime(name, f.get("content_type"))
-        data: bytes = f["data"]
+        data, mime = to_jpeg_bytes(f["data"])
         text = await _ocr_image(settings, data, mime)
         ocr_parts.append(f"=== PAGE {i} ({name}) ===\n{text}")
 

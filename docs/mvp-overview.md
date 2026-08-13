@@ -76,10 +76,10 @@ Telegram (tunnel → webhook)
 ## Пути на Yandex Disk (как в концепте)
 
 ```text
-/Приходные накладные/
-  /<Площадка или org>/
-    /<Склад>/
-      /<Пользователь Telegram или display name>/
+/incoming_invoices/
+  /<org_id>/
+    /<warehouse_id>/
+      /<user_label>/
         /<Дата YYYY-MM-DD>/
           /<packet_id>/
             /images/

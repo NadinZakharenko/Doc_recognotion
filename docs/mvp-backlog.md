@@ -33,7 +33,7 @@
 ### СУБД / хранилище
 - [ ] PostgreSQL: users, orgs, warehouses, bindings, packets, packet_files
 - [ ] Адаптер `YandexDiskStorage` + `LocalStorage` (переключение конфигом)
-- [ ] Путь: `/Приходные накладные/<org>/<warehouse>/<user>/<date>/<packet_id>/`
+- [ ] Путь: `/incoming_invoices/<org>/<warehouse>/<user>/<date>/<packet_id>/`
 - [ ] Миграции + seed одной org/склада
 
 ### Сервис

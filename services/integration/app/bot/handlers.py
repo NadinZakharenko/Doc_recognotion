@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot.api import TelegramClient
 from app.config import get_settings
 from app.db.models import Org, Packet, PacketFile, User, UserBinding, Warehouse, WorkerJob
+from app.ocr.image_normalize import to_jpeg_bytes
 from app.storage import build_packet_path, get_storage
 
 logger = logging.getLogger(__name__)
@@ -189,7 +190,6 @@ async def add_photo_to_draft(
     seq = max((f.seq_no for f in existing), default=0) + 1
     filename = f"{seq:03d}.jpg"
 
-    # Ack immediately — download/storage can take seconds or fail on VPN
     await tg.send_message(
         chat_id,
         f"Получил фото, сохраняю как №{seq}…",
@@ -203,28 +203,15 @@ async def add_photo_to_draft(
             await tg.send_message(chat_id, "Не удалось получить файл из Telegram.")
             return
         data = await tg.download_file(file_path)
-
-        storage = get_storage()
-        assert packet.storage_path
-        images_dir = f"{packet.storage_path.rstrip('/')}/images"
-        await storage.ensure_dir(images_dir)
-        storage_key = f"{images_dir}/{filename}"
-        await storage.put_bytes(storage_key, data, "image/jpeg")
-
-        session.add(
-            PacketFile(
-                packet_id=packet.id,
-                seq_no=seq,
-                filename=filename,
-                content_type="image/jpeg",
-                storage_key=storage_key,
-                telegram_file_id=file_id,
-                file_unique_id=file_unique_id,
-                size_bytes=len(data),
-            )
+        await _persist_photo(
+            session,
+            packet,
+            seq=seq,
+            filename=filename,
+            data=data,
+            file_token=file_id,
+            file_unique_id=file_unique_id,
         )
-        packet.photos_count = seq
-        await session.commit()
     except Exception:
         logger.exception("Failed to save photo for user %s", user_id)
         await tg.send_message(
@@ -241,27 +228,143 @@ async def add_photo_to_draft(
     )
 
 
-async def finish_packet(session: AsyncSession, tg: TelegramClient, user_id: int, chat_id: int) -> None:
+async def save_photo_bytes_to_draft(
+    session: AsyncSession,
+    bot: Any,
+    user_id: int,
+    chat_id: int,
+    data: bytes,
+    *,
+    file_token: str | None = None,
+    file_unique_id: str | None = None,
+    user_id_for_send: int | None = None,
+) -> None:
+    """Channel-agnostic photo save (MAX / Telegram after download)."""
+    binding = await get_binding(session, user_id)
+    if not binding:
+        await _bot_send(
+            bot,
+            chat_id,
+            "Сначала выберите организацию и склад.",
+            reply_markup=await orgs_keyboard(session),
+            user_id=user_id_for_send,
+        )
+        return
+
+    packet = await get_or_create_draft(session, user_id, binding)
+    existing = (
+        await session.scalars(select(PacketFile).where(PacketFile.packet_id == packet.id))
+    ).all()
+    seq = max((f.seq_no for f in existing), default=0) + 1
+    filename = f"{seq:03d}.jpg"
+
+    await _bot_send(
+        bot,
+        chat_id,
+        f"Получил фото, сохраняю как №{seq}…",
+        reply_markup=main_keyboard(),
+        user_id=user_id_for_send,
+    )
+
+    try:
+        await _persist_photo(
+            session,
+            packet,
+            seq=seq,
+            filename=filename,
+            data=data,
+            file_token=file_token,
+            file_unique_id=file_unique_id,
+        )
+    except Exception:
+        logger.exception("Failed to save photo for user %s", user_id)
+        await _bot_send(
+            bot,
+            chat_id,
+            "Не удалось сохранить фото (сеть или Яндекс.Диск). Пришлите ещё раз и дождитесь «Фото N добавлено».",
+            reply_markup=main_keyboard(),
+            user_id=user_id_for_send,
+        )
+        return
+
+    await _bot_send(
+        bot,
+        chat_id,
+        f"Фото {seq} добавлено в пакет.",
+        reply_markup=main_keyboard(),
+        user_id=user_id_for_send,
+    )
+
+
+async def _persist_photo(
+    session: AsyncSession,
+    packet: Packet,
+    *,
+    seq: int,
+    filename: str,
+    data: bytes,
+    file_token: str | None,
+    file_unique_id: str | None,
+) -> None:
+    storage = get_storage()
+    assert packet.storage_path
+    jpeg_data, content_type = to_jpeg_bytes(data)
+    images_dir = f"{packet.storage_path.rstrip('/')}/images"
+    await storage.ensure_dir(images_dir)
+    storage_key = f"{images_dir}/{filename}"
+    await storage.put_bytes(storage_key, jpeg_data, content_type)
+    session.add(
+        PacketFile(
+            packet_id=packet.id,
+            seq_no=seq,
+            filename=filename,
+            content_type=content_type,
+            storage_key=storage_key,
+            telegram_file_id=file_token,
+            file_unique_id=file_unique_id,
+            size_bytes=len(jpeg_data),
+        )
+    )
+    packet.photos_count = seq
+    await session.commit()
+
+
+async def _bot_send(
+    bot: Any,
+    chat_id: int,
+    text: str,
+    *,
+    reply_markup: dict[str, Any] | None = None,
+    user_id: int | None = None,
+) -> None:
+    try:
+        await bot.send_message(chat_id, text, reply_markup=reply_markup, user_id=user_id)
+    except TypeError:
+        await bot.send_message(chat_id, text, reply_markup=reply_markup)
+
+
+async def finish_packet(session: AsyncSession, bot: Any, user_id: int, chat_id: int, *, user_id_for_send: int | None = None) -> None:
     packet = (
         await session.scalars(
             select(Packet).where(Packet.telegram_user_id == user_id, Packet.status == "draft")
         )
     ).first()
     if not packet:
-        await tg.send_message(chat_id, "Нет открытого пакета. Пришлите фото.", reply_markup=main_keyboard())
+        await _bot_send(bot, chat_id, "Нет открытого пакета. Пришлите фото.", reply_markup=main_keyboard(), user_id=user_id_for_send)
         return
 
-    # Trust files table over cached counter (counter can lag after failed uploads)
     files_count = len(
         (
             await session.scalars(select(PacketFile).where(PacketFile.packet_id == packet.id))
         ).all()
     )
     if files_count < 1 and packet.photos_count < 1:
-        await tg.send_message(
+        await _bot_send(
+            bot,
             chat_id,
             "В пакете нет сохранённых фото. Пришлите фото ещё раз (дождитесь «Фото N добавлено»), затем «Завершить пакет».",
             reply_markup=main_keyboard(),
+            user_id=user_id_for_send,
         )
         return
 
@@ -272,10 +375,12 @@ async def finish_packet(session: AsyncSession, tg: TelegramClient, user_id: int,
     session.add(WorkerJob(packet_id=packet.id, job_type="recognize"))
     await session.commit()
 
-    await tg.send_message(
+    await _bot_send(
+        bot,
         chat_id,
         f"Пакет принят в обработку ({packet.photos_count} фото).\nИщите результат в 1С (список ready).",
         reply_markup=main_keyboard(),
+        user_id=user_id_for_send,
     )
 
 
