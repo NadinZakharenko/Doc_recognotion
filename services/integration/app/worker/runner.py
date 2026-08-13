@@ -152,11 +152,19 @@ async def process_recognize(session: AsyncSession, packet_id, attempts: int) -> 
         packet.supplier_name = supplier.get("name")
 
     has_signal = bool(result.get("lines")) or bool((result.get("header") or {}).get("number"))
-    if settings.ocr_mode not in ("stub",) and not has_signal and not markdown:
-        packet.status = "error"
-        packet.error_message = "; ".join(
-            w.get("message", "") for w in (result.get("warnings") or []) if w.get("message")
-        )[:2000] or "Recognition produced empty output"
+    doc_recognized = has_signal or (result.get("document_type") in ("torg12", "upd"))
+    warning_text = "; ".join(
+        w.get("message", "") for w in (result.get("warnings") or []) if w.get("message")
+    )[:2000]
+
+    if settings.ocr_mode not in ("stub",) and not doc_recognized:
+        packet.error_message = warning_text or packet.error_message
+        if not packet.error_message and not markdown:
+            packet.error_message = "Recognition produced empty output"
+        if packet.error_message:
+            packet.status = "error"
+    else:
+        packet.error_message = None
 
     await session.commit()
 
@@ -187,9 +195,10 @@ async def fail_job(session: AsyncSession, job_id, packet_id, error: str) -> None
         {"id": job_id, "err": error[:2000]},
     )
     packet = await session.get(Packet, packet_id)
-    if packet and packet.status == "processing":
-        packet.status = "error"
-        packet.error_message = error[:2000]
+    if packet and packet.status != "imported":
+        packet.error_message = (error or "")[:2000] or packet.error_message
+        if packet.error_message:
+            packet.status = "error"
     await session.commit()
 
 
