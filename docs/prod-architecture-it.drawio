@@ -1,0 +1,232 @@
+<mxfile host="Electron" agent="Doc_recognotion">
+  <diagram id="prod-architecture-it" name="PROD architecture IT">
+    <mxGraphModel dx="1752" dy="989" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=18;fontStyle=1;fontColor=#1A1A1A;" value="PROD архитектура для ИТ: MAX + Orchestrator + OCR + PostgreSQL + 1С" vertex="1">
+          <mxGeometry height="36" width="1160" x="188" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontColor=#666666;" value="Технический контур · слои сервисов · данные · интеграции · точки управления и мониторинга" vertex="1">
+          <mxGeometry height="24" width="1000" x="349" y="74" as="geometry" />
+        </mxCell>
+        <mxCell id="band1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#D0D0D0;dashed=1;dashPattern=8 8;" value="" vertex="1">
+          <mxGeometry height="130" width="1490" x="40" y="119" as="geometry" />
+        </mxCell>
+        <mxCell id="band1t" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=12;fontColor=#333333;" value="1. Канал и вход событий" vertex="1">
+          <mxGeometry height="20" width="240" x="235" y="127" as="geometry" />
+        </mxCell>
+        <mxCell id="max_user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;" value="Пользователь&#xa;MAX" vertex="1">
+          <mxGeometry height="55" width="130" x="80" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="max_bot" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;" value="MAX Bot&#xa;channel layer" vertex="1">
+          <mxGeometry height="55" width="150" x="260" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="max_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;" value="MAX API&#xa;messages / files / updates" vertex="1">
+          <mxGeometry height="55" width="180" x="470" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="band2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#D0D0D0;dashed=1;dashPattern=8 8;" value="" vertex="1">
+          <mxGeometry height="180" width="1490" x="37" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="band2t" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=12;fontColor=#333333;" value="2. Приём, API и запуск процесса" vertex="1">
+          <mxGeometry height="20" width="280" x="235" y="278" as="geometry" />
+        </mxCell>
+        <mxCell id="poller" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;" value="MAX poller&#xa;long polling / webhook adapter" vertex="1">
+          <mxGeometry height="60" width="180" x="80" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="bot_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;" value="Bot API / Intake service&#xa;packet creation · context · auth" vertex="1">
+          <mxGeometry height="60" width="220" x="320" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="public_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;" value="Public API&#xa;/health · /packets · /imported" vertex="1">
+          <mxGeometry height="60" width="210" x="600" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="orchestrator_api" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;" value="Orchestrator client&#xa;start workflow / signal / retry" vertex="1">
+          <mxGeometry height="60" width="220" x="870" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="band3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#D0D0D0;dashed=1;dashPattern=8 8;" value="" vertex="1">
+          <mxGeometry height="220" width="1490" x="37" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="band3t" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=12;fontColor=#333333;" value="3. Оркестрация и обработка документа" vertex="1">
+          <mxGeometry height="20" width="320" x="235" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="workflow" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontStyle=1;" value="Workflow engine&#xa;ProcessInboundDocument" vertex="1">
+          <mxGeometry height="65" width="210" x="80" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="step1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" value="PrepareImages" vertex="1">
+          <mxGeometry height="45" width="140" x="350" y="529" as="geometry" />
+        </mxCell>
+        <mxCell id="step2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" value="RunOCR" vertex="1">
+          <mxGeometry height="45" width="180" x="539" y="604" as="geometry" />
+        </mxCell>
+        <mxCell id="step3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" value="ExtractStructuredData" vertex="1">
+          <mxGeometry height="45" width="180" x="655" y="524" as="geometry" />
+        </mxCell>
+        <mxCell id="step4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" value="ValidateBusinessFields" vertex="1">
+          <mxGeometry height="45" width="180" x="840" y="605" as="geometry" />
+        </mxCell>
+        <mxCell id="step5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" value="RouteByResult&#xa;ready / manual_review / error" vertex="1">
+          <mxGeometry height="65" width="200" x="995" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="step6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" value="WaitFor1CResult&#xa;after scheduled import" vertex="1">
+          <mxGeometry height="65" width="180" x="1235" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="band4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#D0D0D0;dashed=1;dashPattern=8 8;" value="" vertex="1">
+          <mxGeometry height="260" width="1490" x="40" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="band4t" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=12;fontColor=#333333;" value="4. Данные, внешние сервисы и ERP" vertex="1">
+          <mxGeometry height="20" width="320" x="235" y="718" as="geometry" />
+        </mxCell>
+        <mxCell id="pg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" value="PostgreSQL&#xa;packets · statuses · result_json&#xa;audit trail · bindings" vertex="1">
+          <mxGeometry height="75" width="220" x="100" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="storage" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" value="File storage&#xa;local / object storage&#xa;source images" vertex="1">
+          <mxGeometry height="75" width="220" x="366" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="ocr" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" value="Yandex Vision OCR" vertex="1">
+          <mxGeometry height="55" width="220" x="630" y="755" as="geometry" />
+        </mxCell>
+        <mxCell id="gpt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" value="YandexGPT&#xa;structuring / extraction" vertex="1">
+          <mxGeometry height="55" width="220" x="629" y="825" as="geometry" />
+        </mxCell>
+        <mxCell id="erp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" value="1С:ERP&#xa;регламентное задание&#xa;poll PostgreSQL · import" vertex="1">
+          <mxGeometry height="75" width="220" x="980" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="monitoring" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" value="Monitoring / logs / alerts&#xa;SLA · retries · dead-letter" vertex="1">
+          <mxGeometry height="75" width="220" x="1260" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" edge="1" parent="1" source="max_user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#6C8EBF;endArrow=block;endFill=1;" target="max_bot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" edge="1" parent="1" source="max_bot" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#6C8EBF;endArrow=block;endFill=1;" target="max_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" edge="1" parent="1" source="max_api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#9673A6;endArrow=block;endFill=1;" target="poller">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560.03" y="240" />
+              <mxPoint x="170.03" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="a4" edge="1" parent="1" source="poller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#9673A6;endArrow=block;endFill=1;" target="bot_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" edge="1" parent="1" source="bot_api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#9673A6;endArrow=block;endFill=1;" target="public_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" edge="1" parent="1" source="public_api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#9673A6;endArrow=block;endFill=1;" target="orchestrator_api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" edge="1" parent="1" source="orchestrator_api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#D6B656;endArrow=block;endFill=1;" target="workflow">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980.08" y="430" />
+              <mxPoint x="185" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="w1" edge="1" parent="1" source="workflow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#D6B656;endArrow=block;endFill=1;" target="step1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w2" edge="1" parent="1" source="step1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#D6B656;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;jumpStyle=arc;" target="step2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w3" edge="1" parent="1" source="step2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#D6B656;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="step3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w4" edge="1" parent="1" source="step3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#D6B656;endArrow=block;endFill=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="step4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w5" edge="1" parent="1" source="step4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#D6B656;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="step5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="w6" edge="1" parent="1" source="step5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#D6B656;endArrow=block;endFill=1;" target="step6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" edge="1" parent="1" source="workflow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;" target="pg" value="read/write statuses">
+          <mxGeometry relative="1" x="-0.1429" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="185" y="650" />
+              <mxPoint x="210" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d2" edge="1" parent="1" source="step1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" target="storage" value="source images">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="385" y="660" />
+              <mxPoint x="490" y="660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d3" edge="1" parent="1" source="step2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;" target="ocr" value="OCR request">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="678" y="670" />
+              <mxPoint x="741" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d4" edge="1" parent="1" source="step3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;jumpStyle=arc;" target="gpt" value="structured text">
+          <mxGeometry relative="1" x="-0.0922" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="790" y="669.94" />
+              <mxPoint x="880" y="669.94" />
+              <mxPoint x="880" y="852.53" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d5" edge="1" parent="1" source="pg" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;" target="erp" value="poll status=ready">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210.08" y="900" />
+              <mxPoint x="1085" y="900" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d6" edge="1" parent="1" source="erp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" target="pg" value="imported / error (write-back)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1145" y="920" />
+              <mxPoint x="155" y="920" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d7" edge="1" parent="1" source="erp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;exitX=0.75;exitY=0;exitDx=0;exitDy=0;" target="step6" value="status update">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1137.5" y="670" />
+              <mxPoint x="1325" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d8" edge="1" parent="1" source="workflow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeWidth=2;strokeColor=#82B366;endArrow=block;endFill=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" target="monitoring" value="telemetry">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="70.08" y="552.46" />
+              <mxPoint x="70.08" y="950" />
+              <mxPoint x="1370.08" y="950" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#CCCCCC;" value="" vertex="1">
+          <mxGeometry height="120" width="1490" x="40" y="989" as="geometry" />
+        </mxCell>
+        <mxCell id="legendt" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=12;fontColor=#333333;" value="Принципы для ИТ" vertex="1">
+          <mxGeometry height="20" width="180" x="55" y="996" as="geometry" />
+        </mxCell>
+        <mxCell id="note1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#555555;" value="1. Источник правды по статусам и результатам — PostgreSQL." vertex="1">
+          <mxGeometry height="18" width="600" x="55" y="1026" as="geometry" />
+        </mxCell>
+        <mxCell id="note2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#555555;" value="2. MAX — только входной канал; бизнес-логика живёт в workflow orchestration." vertex="1">
+          <mxGeometry height="18" width="700" x="55" y="1048" as="geometry" />
+        </mxCell>
+        <mxCell id="note3" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#555555;" value="3. 1С по регламентному заданию опрашивает PostgreSQL на пакеты Ready, загружает их автоматически и возвращает Imported/Error." vertex="1">
+          <mxGeometry height="18" width="760" x="55" y="1070" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
