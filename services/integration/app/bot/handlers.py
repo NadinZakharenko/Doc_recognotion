@@ -144,16 +144,6 @@ async def get_or_create_draft(session: AsyncSession, user_id: int, binding: User
         date_str=date.today().isoformat(),
         packet_id=str(packet_id),
     )
-    # local backend: path relative to LOCAL_STORAGE_ROOT without leading slash root name
-    if settings.storage_backend == "local":
-        storage_path = build_packet_path(
-            disk_root="packets",
-            org_id=binding.org_id,
-            warehouse_id=binding.warehouse_id,
-            user_label=user_label,
-            date_str=date.today().isoformat(),
-            packet_id=str(packet_id),
-        )
 
     draft = Packet(
         id=packet_id,
@@ -216,7 +206,7 @@ async def add_photo_to_draft(
         logger.exception("Failed to save photo for user %s", user_id)
         await tg.send_message(
             chat_id,
-            "Не удалось сохранить фото (сеть/VPN или Яндекс.Диск). Пришлите ещё раз и дождитесь «Фото N добавлено».",
+            "Не удалось сохранить фото в локальную папку. Пришлите ещё раз и дождитесь «Фото N добавлено».",
             reply_markup=main_keyboard(),
         )
         return
@@ -281,7 +271,7 @@ async def save_photo_bytes_to_draft(
         await _bot_send(
             bot,
             chat_id,
-            "Не удалось сохранить фото (сеть или Яндекс.Диск). Пришлите ещё раз и дождитесь «Фото N добавлено».",
+            "Не удалось сохранить фото в локальную папку. Пришлите ещё раз и дождитесь «Фото N добавлено».",
             reply_markup=main_keyboard(),
             user_id=user_id_for_send,
         )

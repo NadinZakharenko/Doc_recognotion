@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     max_poll_limit: int = 100
 
     storage_backend: str = "local"  # local | yandex
-    local_storage_root: str = "./data/packets"
+    local_storage_root: str = "C:/Test/incoming_invoices"
     yandex_client_id: str = ""
     yandex_client_secret: str = ""
     yandex_refresh_token: str = ""

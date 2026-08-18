@@ -1,4 +1,4 @@
-# Integration service (Telegram → storage → OCR → 1C API)
+# Integration service (MAX → local storage → OCR → 1C API)
 
 ## Quick start
 
@@ -26,8 +26,8 @@ app/
     models.py
     session.py
   storage/
-    local.py              # fallback
-    yandex.py             # Yandex Disk OAuth
+    local.py              # active storage backend for MVP_Max_Local
+    yandex.py             # legacy adapter
   worker/
     runner.py             # queue + stub OCR
 migrations/
@@ -36,6 +36,6 @@ migrations/
 
 ## Notes
 
-- Default `STORAGE_BACKEND=local` until Yandex OAuth is ready.
+- Default `STORAGE_BACKEND=local`, root `C:\Test\incoming_invoices`.
 - `OCR_MODE=stub` until samples + external OCR in iteration 2.
 - Bot photo/org handlers are stubs — whitelist + idempotent updates work.

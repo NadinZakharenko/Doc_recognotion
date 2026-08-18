@@ -1,7 +1,7 @@
-# MVP (зафиксированный): Telegram → OCR → 1С
+# MVP (зафиксированный): MAX → OCR → 1С
 
-Канал: **Telegram**. Документы: **ТОРГ-12 / УПД**. Выход: **`result.json`**.  
-Хранилище: **Yandex Disk** (личные каталоги), fallback: локальный диск/SMB.  
+Канал: **MAX**. Документы: **ТОРГ-12 / УПД**. Выход: **`result.json`**.  
+Хранилище: **локальная папка на ПК** `C:\Test\incoming_invoices`.  
 Правки только в 1С. Excel и превью в чате нет.
 
 ---
@@ -10,12 +10,12 @@
 
 | # | Тема | Решение |
 |---|------|---------|
-| 1 | Telegram-бот | **Создать новый** (@BotFather) |
-| 2 | Webhook | Пока **туннель** (Cloudflare Tunnel / ngrok и т.п.) |
-| 3 | Доступ к боту | **Один** `telegram_user_id` (whitelist) |
-| 4 | Yandex | Личный **Яндекс 360**, OAuth этого аккаунта |
+| 1 | MAX-бот | **Новый бот** в MAX |
+| 2 | Транспорт | **Long polling**, без webhook |
+| 3 | Доступ к боту | whitelist по id канала |
+| 4 | Файлы | Локальная папка `C:\Test\incoming_invoices` |
 | 5 | Структура папок | Как в концепте — **персональные каталоги** |
-| 6 | ИБ | ОК на Yandex Disk + внешний OCR/LLM на старте |
+| 6 | ИБ | Файлы остаются локально; внешний OCR/LLM на старте |
 | 7 | Список в 1С | Оператор **сам обновляет** (кнопка), без регламента |
 | 8 | Выбор в 1С | **Вручную** (пакет/папка), без автофильтра по правам |
 | 9 | Fallback storage | **Да** — локальный диск/SMB, тот же API |
@@ -26,15 +26,17 @@
 ## Поток MVP
 
 ```text
-1 пользователь Telegram (whitelist)
+1 пользователь MAX (whitelist)
   → org / склад
   → фото страниц
   → «Завершить пакет»
-  → Yandex Disk (персональный путь) + PostgreSQL
+  → локальная папка + PostgreSQL
   → OCR (внешний API) → result.json
-  → status = ready
-  → 1С: кнопка обновить → ручной выбор пакета/папки
-  → черновик ПТиУ → POST .../imported
+  → status = ready (успех) / error (не распознано)
+  → 1С: кнопка обновить → список пакетов status=ready
+  → оператор: ручной выбор пакета
+  → черновик ПТиУ из данных пакета (result_json)
+  → после загрузки: запись status=imported в PostgreSQL
 ```
 
 ### UX бота
@@ -53,30 +55,31 @@
 
 | Узел | Решение |
 |------|---------|
-| Канал | Новый Telegram-бот, webhook через туннель |
-| ACL бота | Whitelist: 1 user id |
+| Канал | MAX-бот, long polling |
+| ACL бота | Whitelist: 1 user id канала |
 | Сервис | On-prem RWB |
 | Реестр | PostgreSQL |
-| Файлы | Yandex Disk API (личный 360); адаптер + fallback local/SMB |
+| Файлы | Локальная папка на ПК |
 | OCR | Внешний Vision/LLM |
 | 1С | Pull по кнопке, ручной выбор пакета, ручной ПТиУ |
 
 ```text
-Telegram (tunnel → webhook)
+MAX (long polling)
   → Bot service
        ├─ PostgreSQL
-       ├─ Yandex Disk / local storage
+       ├─ local storage
        └─ OCR worker
-1С:ERP ← HTTP API (list / result / imported)
+1С:ERP ← PostgreSQL (status=ready + result_json)
          оператор сам Refresh + выбирает пакет вручную
+1С:ERP → PostgreSQL (UPDATE status='imported' / 'error')
 ```
 
 ---
 
-## Пути на Yandex Disk (как в концепте)
+## Пути в локальной папке
 
 ```text
-/incoming_invoices/
+C:\Test\incoming_invoices\
   /<org_id>/
     /<warehouse_id>/
       /<user_label>/
@@ -89,7 +92,7 @@ Telegram (tunnel → webhook)
 ```
 
 Для пилота с одним пользователем ветка `<Пользователь>/` всё равно создаётся — проще масштабировать позже.  
-В БД хранятся `packet_id`, статус и `storage_path`; 1С работает через API, но UI MVP допускает **ручной выбор** пакета (по сути выбор записи/папки из списка).
+В БД хранятся `packet_id`, статус и `storage_path`; 1С читает готовые пакеты напрямую из PostgreSQL и для статусов использует обновление `imported/error`. UI MVP допускает **ручной выбор** пакета.
 
 ---
 
@@ -97,9 +100,9 @@ Telegram (tunnel → webhook)
 
 - Кнопка «Обновить список» (без регламентного задания).
 - Список пакетов `ready` (можно показать все для пилота — один пользователь).
-- Оператор **вручную** выбирает нужный пакет.
-- Создаёт черновик ПТиУ вручную / полуавтоматом из `result.json`.
-- Вызывает `imported`.
+- Оператор **вручную** выбирает нужный пакет в списке `ready`.
+- Создаёт черновик ПТиУ вручную / полуавтоматом на основании `result_json` из PostgreSQL.
+- После загрузки возвращает статус пакета в PostgreSQL: `imported` (или `error`).
 
 Автофильтрация по пользователю 1С / площадке — **после MVP**.
 
@@ -107,7 +110,7 @@ Telegram (tunnel → webhook)
 
 ## Контракты
 
-- `specs/result.schema.json` — `telegram_user_id`
+- `specs/result.schema.json` — `telegram_user_id` (в пилоте хранит id пользователя канала)
 - `specs/openapi.yaml` — `list` / `result` / `imported`
 - Storage за интерфейсом адаптера: `YandexDiskStorage` | `LocalStorage`
 

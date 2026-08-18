@@ -1,12 +1,12 @@
 # Doc recognition (MAX → OCR → 1С)
 
-Пилот RWB: товаровед фотографирует ТОРГ-12/УПД в **MAX**, сервис сохраняет пакет на **Yandex Disk** (или local), распознаёт документ и отдаёт `result.json` в **1С:ERP**.
+Пилот RWB: товаровед фотографирует ТОРГ-12/УПД в **MAX**, сервис сохраняет пакет в **локальную папку** на ПК, распознаёт документ и отдаёт `result.json` в **1С:ERP**.
 
 ## Быстрый старт (пилот без ngrok)
 
 ```powershell
 Copy-Item .env.example .env
-# заполнить MAX_BOT_TOKEN, DATABASE_URL, OCR/Yandex при необходимости
+# заполнить MAX_BOT_TOKEN, DATABASE_URL, OCR/Yandex Cloud при необходимости
 # BOT_CHANNEL=max
 
 # API + OCR worker
@@ -33,7 +33,7 @@ Copy-Item .env.example .env
 ## Краткие решения пилота
 
 - Канал: **MAX** (`VZ_Test_Bot` / `se13938479_bot`), транспорт **long polling** (без иностранного VPN / ngrok)
-- Хранилище: Yandex Disk (личный 360); fallback local
+- Хранилище: локальная папка `C:\Test\incoming_invoices`
 - UX бота: org/склад + фото + «Завершить пакет»; без push ready/imported
 - 1С: кнопка обновить, ручной выбор пакета, ручной черновик ПТиУ
 - OCR: Yandex Vision OCR → YandexGPT

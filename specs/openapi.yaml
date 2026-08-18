@@ -1,18 +1,18 @@
 openapi: 3.0.3
 info:
-  title: Doc Recognition Integration API (Telegram → 1С:ERP)
+  title: Doc Recognition Integration API (MAX → 1С:ERP)
   description: |
     HTTP API интеграционного сервиса для 1С:ERP (контур RWB).
 
-    Канал загрузки MVP: Telegram-бот. Файлы: Yandex Disk.
+    Канал загрузки MVP: MAX-бот. Файлы: локальная папка на ПК.
     Пользователю в мессенджер не пушатся статусы ready/error/imported —
     готовность пакетов смотрится в 1С.
 
-    1С в режиме pull:
-    1. получает список пакетов со статусом `ready`;
-    2. забирает `result.json` по `packet_id`;
+    1С в режиме pull (без чтения файлов с диска):
+    1. получает список пакетов со статусом `ready` из PostgreSQL;
+    2. забирает данные пакета (в т.ч. `result_json`) по `packet_id` из PostgreSQL;
     3. оператор вручную создаёт черновик ПТиУ;
-    4. вызывает `POST /packets/{packet_id}/imported`.
+    4. после загрузки возвращает статус пакета в PostgreSQL: `imported` (а при необходимости — `error`).
 
     Аутентификация MVP: статический Bearer-токен (или Basic) на стороне сервиса.
   version: 1.1.0

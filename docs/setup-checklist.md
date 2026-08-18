@@ -57,41 +57,28 @@ SET org_id = EXCLUDED.org_id, warehouse_id = EXCLUDED.warehouse_id;
 
 ---
 
-## 3. Yandex Disk (личный 360)
+## 3. Локальная папка для входящих документов
 
-1. Создать приложение: [oauth.yandex.ru](https://oauth.yandex.ru/) → «Создать новое приложение»
-2. Платформы: **Веб-сервисы**; Redirect URI для отладки: `https://oauth.yandex.ru/verification_code`
-3. Доступы Disk:  
-   - `cloud_api:disk.read`  
-   - `cloud_api:disk.write`  
-   - `cloud_api:disk.app_folder` (опционально)
-4. Скопировать `ClientID` / `Client secret` → `YANDEX_CLIENT_ID` / `YANDEX_CLIENT_SECRET`
-5. Получить код (в браузере, под пилотным Яндекс-аккаунтом):
+1. Создать папку `C:\Test\incoming_invoices`
+2. Убедиться, что у пользователя, под которым запущен сервис, есть права на чтение/запись
+3. В `.env` указать:
 
 ```text
-https://oauth.yandex.ru/authorize?response_type=code&client_id=<CLIENT_ID>
+STORAGE_BACKEND=local
+LOCAL_STORAGE_ROOT=C:\Test\incoming_invoices
 ```
 
-6. Обменять code на tokens:
+4. Структура внутри папки создаётся автоматически:
 
-```powershell
-Invoke-RestMethod -Method Post -Uri "https://oauth.yandex.ru/token" -Body @{
-  grant_type = "authorization_code"
-  code = "<CODE>"
-  client_id = $env:YANDEX_CLIENT_ID
-  client_secret = $env:YANDEX_CLIENT_SECRET
-}
+```text
+<org_id>/<warehouse_id>/<user_label>/<YYYY-MM-DD>/<packet_id>/images/
 ```
 
-7. Сохранить `refresh_token` → `YANDEX_REFRESH_TOKEN`
-8. В `.env`: `STORAGE_BACKEND=yandex` (для старта без OAuth оставить `local`)
-9. Корень: `YANDEX_DISK_ROOT=/incoming_invoices` (латиница — без проблем с кодировкой)
+5. Проверка вручную: отправить фото в бот и убедиться, что в `C:\Test\incoming_invoices` появилась новая ветка каталога с `images/`
 
-Проверка вручную (после появления access_token): создать папку через Disk API `PUT /v1/disk/resources?path=...`.
+### 3b. YandexGPT + Vision OCR
 
-### 3b. YandexGPT + Vision OCR (не Disk OAuth)
-
-Нужны ключи **Yandex Cloud** (отдельные от Диска):
+Нужны ключи **Yandex Cloud**:
 
 1. [console.yandex.cloud](https://console.yandex.cloud) → каталог → скопировать **Folder ID** → `YANDEX_FOLDER_ID`
 2. Сервисный аккаунт с ролями `ai.languageModels.user` + `ai.vision.user` (или `editor` на каталог)
@@ -107,7 +94,7 @@ Invoke-RestMethod -Method Post -Uri "https://oauth.yandex.ru/token" -Body @{
 ```powershell
 cd C:\AI\Doc_recognotion
 Copy-Item .env.example .env
-# заполнить TELEGRAM_*, API_BEARER_TOKEN; STORAGE_BACKEND=local для первого прогона
+# заполнить MAX_*, API_BEARER_TOKEN и Yandex Cloud OCR
 
 docker compose up -d --build
 curl http://localhost:8080/health
